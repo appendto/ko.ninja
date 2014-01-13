@@ -101,7 +101,7 @@ module.exports = function(grunt) {
             all: {
                 options: {
                     urls: [
-                        'http://localhost:8001/qunit.html'
+                        'http://localhost:8004/qunit.html'
                     ]
                 }
             }
@@ -124,12 +124,20 @@ module.exports = function(grunt) {
                     server: path.resolve('./server'),
                     debug: false
                 }
+            },
+            test: {
+                options: {
+                    hostname: 'localhost',
+                    port: 8004,
+                    server: path.resolve('./server'),
+                    debug: false
+                }
             }
         },
         connect: {
             test: {
                 options: {
-                    port: 8002,
+                    port: 8001,
                     base: 'test',
                     keepalive: true,
                     middleware: function(connect, options) {
@@ -183,7 +191,7 @@ module.exports = function(grunt) {
 
     // Default task.
     grunt.registerTask('default', ['jshint', 'requirejs']);
-    grunt.registerTask('test', ['connect:qunit', 'qunit']);
-    grunt.registerTask('server', ['express', 'watch']);
+    grunt.registerTask('test', ['express:test', 'qunit']);
+    grunt.registerTask('server', ['express:server', 'watch']);
 
 };

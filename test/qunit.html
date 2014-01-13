@@ -1,32 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>ko.ninja tests</title>
-	<link href="http://code.jquery.com/qunit/qunit-1.12.0.css" rel="stylesheet" type="text/css" />
+<title>ko.ninja tests</title>
+<link href="http://code.jquery.com/qunit/qunit-1.12.0.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
-	<div id="qunit"></div>
-	<div id="qunit-fixture"></div>
+<div id="qunit"></div>
+<div id="qunit-fixture"></div>
 
-	<script src="http://code.jquery.com/qunit/qunit-1.12.0.js"></script>
-	<script>
-		QUnit.config.autostart = false;
-	</script>
-	
-    <script src="/socket.io/socket.io.js"></script>
-	<script src="http://requirejs.org/docs/release/2.1.9/minified/require.js"></script>
-    <script src="ko.ninja.requireConfig.js"></script>
-    <script>
-    	require([
-    		'model.spec.js',
-            'httpModel.spec.js',
-            'socketModel.spec.js',
-    		'viewModel.spec.js',
-            'validation.spec.js'
-		], function () {
-			QUnit.start();
-		});
-    </script>
+<script src="http://code.jquery.com/qunit/qunit-1.12.0.js"></script>
+<script>
+QUnit.config.autostart = false;
+var tests = [];
+tests.push('model.spec.js');
+// tests.push('httpModel.spec.js');
+tests.push('socketModel.spec.js');
+tests.push('viewModel.spec.js');
+tests.push('validation.spec.js');
+</script>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="http://requirejs.org/docs/release/2.1.9/minified/require.js"></script>
+<script src="ko.ninja.requireConfig.js"></script>
+<script>
+	require(tests, function () {
+		QUnit.start();
+	});
+</script>
 
 </body>
 </html>
