@@ -456,354 +456,946 @@
     }
 
 }));
-/*global ActiveXObject, define */
+/*global define */
 
-(function (root, factory) {
+define('validator',[
+	'underscore'
+], function(_) {
+
+	
+
+	return {
+		/**
+		 * Array containing the names of every supported validation rule.
+		 */
+		'supported_rules': ['required', 'minLength', 'maxLength'],
+		/**
+		 * Returns an array containing a description of every validator error that is
+		 * found (if any).
+		 */
+		'validate': function(value, rules) {
+			var self = this;
+			rules = rules || {};
+			var errors = [];
+			_.find(rules, function(rule, name) {
+				if ( self.supported_rules.indexOf(name) < 0 ) {
+					return false;
+				}
+				var err = self.rules[name].call(this, rule, value);
+				if ( err !== true ) {
+					errors.push(err);
+				}
+			});
+			return errors;
+		},
+
+		/*
+		The following validation methods must return `true` if no error is found. Otherwise,
+		they must return a string that describes the error in a user-presentable manner.
+		Referenced the rules used by Sails as a guide: http://sailsjs.org/#!documentation/models
+		*/
+		'rules': {
+
+			'required': function(rule_value, value) {
+				if ( rule_value !== true ) {
+					return true;
+				}
+				if ( _.isNull(value) || value === '' ) {
+					return 'This is a required field.';
+				} else {
+					return true;
+				}
+			},
+
+			'maxLength': function(rule_value, value) {
+				if ( value && value.length <= rule_value ) {
+					return true;
+				}
+				return 'The maximum length allowed is ' + rule_value + ' characters.';
+			},
+
+			'minLength': function(rule_value, value) {
+				if ( value && value.length >= rule_value ) {
+					return true;
+				}
+				return 'The minimum length allowed is ' + rule_value + ' characters.';
+			},
+
+			'string': function(rule_value, value) {
+				if ( _.isString(value) ) {
+					return true;
+				}
+				return 'This value must be a string.';
+			},
+
+			'alpha': function(rule_value, value) {
+				if ( /[^a-zA-Z0-9]/.test(value) ) {
+					return true;
+				}
+				return 'This value must contain only alphabetic characters.';
+			},
+
+			'numeric': function(rule_value, value) {
+				if ( /[^0-9]/.test(value) ) {
+					return true;
+				}
+				return 'This value must be numeric.';
+			},
+
+			'alphanumeric': function(rule_value, value) {
+				if ( /[^a-zA-Z0-9]/.test(value) ) {
+					return true;
+				}
+				return 'This value must be alphanumeric.';
+			},
+
+			'email': function(rule_value, value) {
+				var filter = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+				if ( filter.test(value) ) {
+					return true;
+				} else {
+					return 'This value must be a valid email address.';
+				}
+			},
+
+			'url': function() {
+				return true;
+			},
+
+			'urlish': function() {
+				return true;
+			},
+
+			'ip': function() {
+				return true;
+			},
+
+			'ipv4': function() {
+				return true;
+			},
+
+			'ipv6': function() {
+				return true;
+			},
+
+			'creditcard': function() {
+				return true;
+			},
+
+			'int': function(rule_value, value) {
+				return this.integer(rule_value, value);
+			},
+
+			'integer': function(rule_value, value) {
+				if ( !_.isNumber(value) || Math.floor(value) !== value ) {
+					return 'This value must be an integer.';
+				}
+				return true;
+			},
+
+			'number': function(rule_value, value) {
+				if ( _.isNumber(value) ) {
+					return true;
+				}
+				return 'This value must be a number.';
+			},
+
+			'decimal': function() {
+				return true;
+			},
+
+			'float': function() {
+				return true;
+			},
+
+			'falsey': function(rule_value, value) {
+				if ( !value ) {
+					return true;
+				}
+				return 'This value must be \'falsey.\'';
+			},
+
+			'truthy': function (rule_value, value) {
+				if ( value ) {
+					return true;
+				}
+				return 'This value must be \'truthy.\'';
+			},
+
+			'boolean': function (rule_value, value) {
+				if ( _.isBoolean(value) ) {
+					return true;
+				}
+				return 'This value must be a boolean.';
+			},
+
+			'date': function () {
+				return true;
+			},
+
+			'hexColor': function() {
+				return true;
+			},
+
+			'lowercase': function(rule_value, value) {
+				var tmp = value.toLowerCase();
+				if ( tmp === value ) {
+					return true;
+				}
+				return 'This value must be entirely lowercase.';
+			},
+
+			'uppercase': function(rule_value, value) {
+				var tmp = value.toUpperCase();
+				if ( tmp === value ) {
+					return true;
+				}
+				return 'This value must be entirely uppercase.';
+			},
+
+			'min': function(rule_value, value) {
+				if ( value >= rule_value ) {
+					return true;
+				}
+				return 'The minimum allowed value is: ' + rule_value;
+			},
+
+			'max': function(rule_value, value) {
+				if ( value <= rule_value ) {
+					return true;
+				}
+				return 'The maximum allowed value is: ' + rule_value;
+			},
+
+			'regex': function() {
+				return true;
+			},
+
+			'notRegex': function() {
+				return true;
+			},
+
+			'equals': function(rule_value, value) {
+				if ( value === rule_value ) {
+					return true;
+				}
+				return 'Required value: ' + rule_value;
+			},
+
+			'in': function(rule_value, value) {
+				if ( rule_value.indexOf(value) < 0 ) {
+					return 'The follow values are allowed: ' + rule_value.join(', ');
+				}
+				return true;
+			},
+
+			'notIn': function(rule_value, value) {
+				if ( rule_value.indexOf(value) >= 0 ) {
+					return 'The follow values are not allowed: ' + rule_value.join(', ');
+				}
+				return true;
+			}
+
+		}
+
+	};
+
+});
+
+/**
+ * @module dataStore
+ */
+define('esperanto/main',['require','exports','module','underscore'],function(require, exports, module) {
+
+	var _ = require('underscore');
+
+	/**
+	 * @class DataStore
+	 *
+	 * The DataStore class presents a consistent API that can be applied to multiple types
+	 * of storage engines. Plugins currently exist for localStorage and sessionStorage. We
+	 * can create plugins for querying against a remote data source when the time comes and
+	 * seamlessly transition over.
+	 */
+	var DataStore = function() {
+		this.init.apply(this, _.toArray(arguments));
+		/* Public API */
+		return {
+			/**
+			 * Looks through each value in the collection, returning an array of all the values that contain all of the key-value pairs listed in properties.
+			 * @tutorial datastore_where
+			 * @method
+			 * @memberof DataStore
+			 * @param {String} collection - The name of the collection to be queried.
+			 * @param {Object} props - An object of key / value pairs against which the collection will be queried.
+			 * @return {Promise}
+			 */
+			'where': this.internalAPI.where.bind(this),
+			/**
+			 * Looks through the collection and returns the first value that matches all of the key-value pairs listed in properties.
+			 * @tutorial datastore_findwhere
+			 * @method
+			 * @memberof DataStore
+			 * @param {String} collection - The name of the collection to be queried.
+			 * @param {Object} props - An object of key / value pairs against which the collection will be queried.
+			 * @return {Promise}
+			 */
+			'findWhere': this.internalAPI.findWhere.bind(this),
+			/**
+			 * Updates the attributes of an existing item, given the specified UID.
+			 * @tutorial datastore_save
+			 * @method
+			 * @memberof DataStore
+			 * @param {String} collection - The name of the collection to be queried.
+			 * @param {String} id - The UID of the existing entry to be saved.
+			 * @param {Object} props - An object of key / value pairs that will comprise the updated entry.
+			 * @return {Promise}
+			 */
+			'save': this.internalAPI.save.bind(this),
+			/**
+			 * Creates a new entry within the collection.
+			 * @tutorial datastore_create
+			 * @method
+			 * @memberof DataStore
+			 * @param {String} collection - The name of the collection to be queried.
+			 * @param {Object} props - An object of key / value pairs that will comprise the new entry.
+			 * @return {Promise}
+			 */
+			'create': this.internalAPI.create.bind(this),
+			/**
+			 * Deletes the specified collection entry.
+			 * @tutorial datastore_destroy
+			 * @method
+			 * @memberof DataStore
+			 * @param {String} collection - The name of the collection to be queried.
+			 * @param {String} id - The UID of the existing entry to be deleted.
+			 * @return {Promise}
+			 */
+			'destroy': this.internalAPI.destroy.bind(this),
+			/**
+			 * Returns an array containing every entry within the specified collection.
+			 * @tutorial datastore_getallmodels
+			 * @method
+			 * @memberof DataStore
+			 * @param {String} collection - The name of the collection to be queried.
+			 * @return {Promise}
+			 */
+			'getAllModels': this.internalAPI.getAllModels.bind(this)
+		};
+	};
+
+	_.extend(DataStore.prototype,
+		/** @lends DataStore.prototype */
+		{
+		'source': 'localStorage',
+		'supportedSources': ['localStorage', 'sessionStorage'],
+		'init': function(source) {
+			if ( source ) {
+				this.setSource(source);
+			}
+			this.initStorage();
+		},
+		'setSource': function(source) {
+			if ( this.supportedSources.indexOf(source) < 0 ) {
+				throw 'Invalid data source specified: ' + source;
+			}
+		},
+		'initStorage': function() {
+			switch ( this.source ) {
+				case 'localStorage' :
+					var API = new require('./lib/localStorage');
+					this.internalAPI = new API();
+					break;
+				case 'sessionStorage' :
+					this.internalAPI = new require('./lib/sessionStorage');
+					break;
+			}
+		}
+	});
+
+	return DataStore;
+
+});
+
+define('esperanto', ['esperanto/main'], function (main) { return main; });
+
+/*global define */
+
+define('ko.ninja.deferred',[],function () {
+
     
 
-    // AMD
-    if (typeof define === 'function' && define.amd) {
-        define('ko.ninja.ajax',[], factory);
-
-    // Non-AMD
-    } else {
-        factory(root.ko);
-    }
-
-} (this, function (ko) {
-
-    
-
-    var Ajax = function (url, callbackFunction) {
-      var self = this,
-        uri;
-      this.updating = false;
-
-      this.abort = function() {
-        if (self.updating) {
-          self.updating = false;
-          self.AJAX.abort();
-          self.AJAX = null;
+    var Deferred = function () {
+      this.callbacks = [];
+    };
+     
+    Deferred.prototype = {
+      err: 0,
+      x: 0,
+     
+      $: function(arr) {
+        this.callbacks.push(arr);
+        if(this.x === 2) {
+            this._(this.o);
         }
-      };
-
-      this.update = function(passData, postMethod) {
-        if (self.updating) {
-            return false;
+        return this;
+      },
+     
+      done: function(cb) {
+        return this.$([cb, 0]);
+      },
+     
+      fail: function(cb) {
+        return this.$([0, cb]);
+      },
+     
+      always: function(cb) {
+        return this.$([0, 0, cb]);
+      },
+     
+      promise: function(cb, err) {
+        return this.$([cb, err]);
+      },
+     
+      reject: function(obj) {
+        if(!this.x) {
+            this.err = 1;
+            this._(obj);
         }
-
-        self.AJAX = null;
-        if (window.XMLHttpRequest) {
-          self.AJAX = new XMLHttpRequest();
-
-        } else {
-          self.AJAX = new ActiveXObject('Microsoft.XMLHTTP');
+        return this;
+      },
+     
+      resolve: function(obj) {
+        if(!this.x) {
+            this._(obj);
         }
-
-        if (self.AJAX === null) {
-          return false;
-
-        } else {
-
-          self.AJAX.onreadystatechange = function() {
-            if (self.AJAX.readyState === 4) {
-              self.updating = false;
-              self.callback(self.AJAX.responseText,self.AJAX.status,self.AJAX.responseXML);
-              self.AJAX = null;
+        return this;
+      },
+     
+      _: function(obj) {
+        this.x = 1;
+        for(var state = this.err, cb = this.callbacks, method = cb.shift(), value = obj; method; ) {
+          try {
+            while(method) {
+                (method = method[2] || (state ? method[1] : method[0])) && (value = method(value || obj)); // jshint ignore:line
+                
+              if(value instanceof Deferred) {
+                /*jshint ignore:start */
+                var that = this;
+                value.always(function(v) {
+                    that._(v || obj);
+                    return v;
+                });
+                /*jshint ignore:end */
+                return;
+              }
+              method = cb.shift();
             }
-          };
-
-          self.updating = new Date();
-
-          if (/post/i.test(postMethod)) {
-            uri = urlCall+'?'+self.updating.getTime();
-            self.AJAX.open('POST', uri, true);
-            self.AJAX.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-            self.AJAX.send(passData);
-
-          } else if (/put/i.test(postMethod)) {
-            uri = urlCall+'?'+self.updating.getTime();
-            self.AJAX.open('PUT', uri, true);
-            self.AJAX.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-            self.AJAX.send(passData);
-
-          } else {
-            uri = urlCall + '?' + passData + '&timestamp=' + (self.updating.getTime());
-            self.AJAX.open('GET', uri, true);
-            self.AJAX.send(null);
+          } catch(e) {
+            if (state) {
+                method = cb.shift();
+                this.err = state = 1;
+            }
           }
-
-          return true;
         }
-      };
-
-      var urlCall = url;
-      this.callback = callbackFunction || function () {};
-
+        this.o = value || obj;
+        this.x = 2;
+      }
+    };
+     
+    Deferred.when = function(m, args) {
+      if(!args) return m;
+     
+      args = [].slice.call(arguments);
+      m = new Deferred();
+     
+      var i = args.length,
+        n = i,
+        res = [],
+        done = function(j) {
+            return function (v) {
+                res[j] = v;
+                if(!--n) {
+                    m.resolve(res);
+                }
+            };
+        },
+        fail = function (v) {
+            m.reject(v);
+        };
+     
+      while(i--) args[i].then(done(i), fail);
+      return m;
     };
 
-    if (typeof define === 'function' && define.amd) {
-      return Ajax;
-    } else {
-      ko.ninjaAjax = Ajax;
-    }
-
-}));
+    return Deferred;
+});
 /*global define, $ */
 
-(function (root, factory) {
-    
+define('ko.ninja.utils',[
+	'ko.ninja.deferred'
+], function(Deferred) {
 
-    // AMD
-    if (typeof define === 'function' && define.amd) {
-        define('ko.ninja.httpModel',[
-            'ko.ninja.baseModel',
-            'ko.ninja.ajax',
-            'underscore'
-        ], factory);
+	
 
-    // Non-AMD
-    } else {
-        factory(root.ko.ninjaBaseModel, root.ko.ninjaAjax, root._, root.ko);
-    }
+	return {
+		/**
+		 * Generates a RFC 4122 Universally Unique Identifier (UID)
+		 * @link http://tools.ietf.org/search/rfc4122
+		 * @return {String}
+		 */
+		'generateUID': function() {
+			return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+				var r = Math.random()*16|0, v = c === 'x' ? r : (r&0x3|0x8);
+				return v.toString(16);
+			});
+		},
 
-} (this, function (BaseModel, Ajax, _, ko) {
+		'deferred': function (options) {
+			if (typeof window.$ === 'object') {
+				return $.Deferred(options);
+			} else {
+				return new Deferred(options);
+			}
+		}
+	};
 
-    
+});
 
-    var HttpModel = BaseModel.extend({
+/*global define */
 
-        suffix: '',
+define('ko.ninja.model',[
+	'underscore',
+	'knockout',
+    'ko.ninja.extend',
+    'ko.ninja.localStorageModel',
+    'validator',
+    'esperanto',
+    'ko.ninja.utils'
+], function(_, ko, extend, LocalStorageModel, validator, Esperanto, utils) {
 
-        urlRoot: function () {
-            return ((this.name) ? '/' + this.name : '') + '/';
-        },
+	
 
-        ajax: function (params) {
+	/**
+	 * Ensures we never instantiate two separate instances of the same model.
+	 */
+	var cache = {
 
-            var ajax;
+		'models': {
+		},
 
-            // Use jQuery ajax if we can
-            if (typeof $ === 'function' && $.ajax) {
+		/**
+		 * Searches the cache for an instance of the specified model type with the given id.
+		 * Returns the instance, or null if nothing is found.
+		 */
+		'getInstance': function(model, id) {
+			if ( !this.models[model] ) {
+				return null;
+			}
+			if ( this.models[model][id]) {
+				return this.models[model][id];
+			}
+			return null;
+		},
 
-                $.ajax(_.extend({
-                    success: function (data) {
-                        params.complete(data);
-                    }.bind(this),
-                    error: function (err) {
-                        params.complete({
-                            error: true,
-                            message: err
-                        });
-                    }.bind(this)
-                }, params));
+		/**
+		 * Stores a model instance in the cache.
+		 */
+		'setInstance': function(model) {
+			if ( !(model instanceof NinjaModel) ) {
+				throw 'Invalid model specified.';
+			}
+			if ( !model.id() ) {
+				throw 'Model does not have a value set for id.';
+			}
+			if ( !this.models[model.model] ) {
+				this.models[model.model] = {};
+			}
+			this.models[model.model][model.id()] = model;
+		},
 
-            // Use our fallback if jQuery isn't available
-            } else {
+		/**
+		 * Removes a model instance from the cache.
+		 */
+		'removeInstance': function(model, id) {
+			if ( !this.models[model] ) {
+				return null;
+			}
+			if ( this.models[model][id]) {
+				delete this.models[model][id];
+			}
+		},
 
-                ajax = new Ajax(params.url, function (data) {
-                    if (_.isFunction(params.complete)) {
-                        params.complete(JSON.parse(data));
-                    }
-                });
+		/**
+		 * Returns the entire cache.models object.
+		 */
+		'getAll': function() {
+			return this.models;
+		}
 
-                ajax.update((JSON.stringify(params.data) || '')
-                    .replace(/:/g, '=')
-                    .replace(/"/g, '')
-                    .replace(/,/g, '&')
-                    .replace(/{/g, '')
-                    .replace(/}/g, ''),
-                    params.method
-                );
+	};
 
-            }
-        },
+	/**
+	 * This is the core class upon which all other NinjaModel instances are based.
+	 *
+	 * @class NinjaModel
+	 */
+	var NinjaModel = function() {
 
-        find: function (query, done) {
-            this.ajax({
-                url: this.urlRoot() + this.suffix,
-                method: 'GET',
-                data: query,
-                complete: done || query
-            });
-        },
+		if ( !NinjaModel.esperanto_initialized ) {
+			NinjaModel.initializeEsperanto();
+		}
 
-        findOne: function (id, done) {
-            this.ajax({
-                url: this.urlRoot() + id + this.suffix,
-                method: 'GET',
-                complete: done
-            });
-        },
+		var options = _.toArray(arguments);
+		var attributes = _.first(options);
 
-        insert: function (data, done) {
-            done = done || function () {};
-            this.ajax({
-                url: this.urlRoot() + this.suffix,
-                method: 'POST',
-                data: data,
-                complete: done
-            });
-        },
+		if ( _.isObject(attributes) && !_.isArray(attributes) ) {
+		} else if ( _.isString(attributes) || _.isNumber(attributes) ) {
+			var attrs = {};
+			attrs[this.idAttribute] = attributes;
+			attributes = attrs;
+		} else if ( !attributes ) {
+			attributes = {};
+		} else {
+			throw 'Invalid model attributes specified.';
+		}
 
-        remove: function (id, done) {
-            done = done || function () {};
-            this.ajax({
-                url: this.urlRoot() + id + this.suffix,
-                method: 'DELETE',
-                complete: done
-            });
-        },
+		var defaults = {};
+		defaults[this.idAttribute] = null;
+		_.defaults(attributes, defaults);
 
-        update: function (id, data, done) {
-            done = done || function () {};
-            this.ajax({
-                url: this.urlRoot() + id + this.suffix,
-                method: 'PUT',
-                data: data,
-                complete: done
-            });
-        }
+		var cached = cache.getInstance(this.model, attributes[this.idAttribute]);
+		if ( cached ) {
+			return cached;
+		}
 
-    });
+		options.splice(0, 1, attributes);
 
-    if (typeof define === 'function' && define.amd) {
-        return HttpModel;
-    } else {
-        ko.ninjaHttpModel = HttpModel;
-    }
+		this._initialize.apply(this, options);
+		if ( _.isFunction(this.initialize) ) {
+			this.initialize.apply(this);
+		}
 
-}));
-/*global io, define */
+	};
 
-(function (root, factory) {
-    
+	NinjaModel.storage = {
+		'method': 'localStorage'
+	};
 
-    // AMD
-    if (typeof define === 'function' && define.amd) {
-        define('ko.ninja.socketModel',[
-            'ko.ninja.baseModel',
-            'underscore'
-        ], factory);
+	NinjaModel.esperanto_initialized = false;
 
-    // Non-AMD
-    } else {
-        factory(root.ko.ninjaBaseModel, root._, root.ko);
-    }
+	/**
+	 * Initializes the default data store for all models.
+	 */
+	NinjaModel.initializeEsperanto = function() {
+		switch ( NinjaModel.storage.method ) {
+			case 'localStorage' :
+				NinjaModel.esperanto = new Esperanto('localStorage');
+				break;
+		}
+	};
 
-} (this, function (BaseModel, _, ko) {
+	_.extend(NinjaModel.prototype, /** @lends NinjaModel.prototype */ {
 
-    
+		/**
+		 * The key that references the unique identifier for this model.
+		 */
+		'idAttribute': 'id',
 
-    var SocketModel = BaseModel.extend({
+		/*
+		Internal method that initializes the instance before calling the user-defined
+		`initialize` method.
+		*/
+		'_initialize': function(attributes) {
 
-        find: function (query, done) {
-            if (!done) {
-                done = query;
-            }
-            this.socket.emit(this.messageNames.find, {
-                data: query
-            }, done);
-        },
+			var self = this;
 
-        findOne: function (id, done) {
-            this.socket.emit(this.messageNames.findOne, {
-                id: id
-            }, done);
-        },
+			_.each(this.attributes, function(value, key) {
+				self[key] = ko.observable(null);
+				self[key + '_validation'] = ko.observableArray();
+				/**
+				 * Contains a count of the total number of validation errors that exist for this instance.
+				 * @memberof NinjaModel.prototype
+				 * @observable
+				 */
+				self.validation_errors = ko.computed(self.validationErrorCount, self);
+				self[key].subscribe(function() {
+					self.validate(key);
+				});
+			});
 
-        insert: function (data, done) {
-            this.socket.emit(this.messageNames.insert, {
-                data: data
-            }, done);
-        },
+			self[self.idAttribute] = ko.observable();
+			if ( this.idAttribute !== 'id' ) {
+				this.id = ko.computed(function() {
+					return self[self.idAttribute]();
+				});
+			}
 
-        remove: function (id, done) {
-            this.socket.emit(this.messageNames.remove, {
-                id: id
-            }, done);
-        },
+			this[this.idAttribute].subscribe(function(id) {
+				if ( !id ) {
+					// @todo ... ?
+					return;
+				}
+				cache.setInstance(self);
+			});
 
-        update: function (id, data, done) {
-            this.socket.emit(this.messageNames.update, {
-                id: id,
-                data: data
-            }, done);
-        },
+			this.initObservables();
 
-        initialize: function (options) {
+			_.each(attributes, function(value, key) {
+				self.set(key, value);
+			});
 
-            this.socket = io.connect((options.protocol || 'http')+ '://' + (options.hostName || 'localhost') + ':' + (options.port || '8080'));
+		},
 
-            // This lets us override the message names if we want to
-            this.messageNames = _.extend({
-                'update': options.name + '-update',
-                'insert': options.name + '-insert',
-                'find': options.name + '-find',
-                'findOne': options.name + '-findOne',
-                'remove': options.name + '-remove'
-            }, options.messageNames || {});
-            
-        }
+		'initObservables': function() {
+			var self = this;
+			_.each(this.observables, function(obs, obsKey) {
+				if ( _.isFunction(obs) ) {
+					self[obsKey] = ko.computed({
+						'read': obs,
+						'deferEvaluation': true,
+						'owner': self
+					});
+				} else if ( _.isArray(obs) ) {
+					self[obsKey] = ko.observableArray(obs);
+				} else if ( _.isObject(obs) && obs.read ) {
+					obs.owner = self;
+					self[obsKey] = ko.computed(obs);
+				} else {
+					self[obsKey] = ko.observable(obs);
+				}
+			});
+		},
 
-    });
+		/* Returns the total number of validation errors that exist for this instance. */
+		'validationErrorCount': function() {
+			var result = 0;
+			var errors = this.getValidationErrors();
+			_.each(errors, function(error) {
+				result += error.length;
+			});
+			return result;
+		},
 
-    if (typeof define === 'function' && define.amd) {
-        return SocketModel;
-    } else {
-        ko.ninjaSocketModel = SocketModel;
-    }
+		/**
+		 * Returns an object describing all of the validation errors that exist for this instance.
+		 * Usually you'll directly reference the various *_validation observables that are
+		 * automatically setup. This is here mainly for debug purposes.
+		 */
+		'getValidationErrors': function() {
+			var self = this;
+			var result = {};
+			var keys = _.keys(this);
+			_.each(keys, function(key) {
+				if ( key.indexOf('_validation') > 0 && self.hasOwnProperty(key) && ko.isObservable(self[key]) ) {
+					result[key.replace('_validation', '')] = ko.unwrap(self[key]);
+				}
+			});
+			return result;
+		},
 
-}));
-/*global define, ko */
+		/**
+		 * Initializes the model instance.
+		 * @override
+		 */
+		'initialize': function() {
+		},
 
-(function (root, factory) {
+		/**
+		 * Sets the value of an attribute.
+		 */
+		'set': function(key, value) {
+			if ( key === this.idAttribute ) {
+			} else {
+				if ( !this.attributes[key] ) {
+					throw 'The specified attribute has not been defined for this model: ' + key;
+				}
+			}
+			this[key](value);
+		},
 
-    
+		/**
+		 * Returns the unwrapped value for the specified attribute.
+		 */
+		'get': function(key) {
+			if ( !this.attributes[key] ) {
+				return undefined;
+			}
+			return ko.unwrap(this[key]);
+		},
 
-    // AMD
-    if (typeof define === 'function' && define.amd) {
-        define('ko.ninja.model',[
-            'ko.ninja.extend',
-            'ko.ninja.localStorageModel',
-            'ko.ninja.httpModel',
-            'ko.ninja.socketModel'
-        ], factory);
+		/**
+		 * Runs validation against any rules that have been defined for the specified
+		 * attribute.
+		 */
+		'validate': function(key) {
+			this[key + '_validation'](validator.validate(ko.unwrap(this[key]), this.attributes[key] || {}));
+		},
 
-    // Non-AMD
-    } else {
-        factory(root.ko.ninjaExtend, root.ko.ninjaLocalStorageModel, root.ko.ninjaSocketModel);
-    }
+		/**
+		 * Updates this model's attributes with those found in the appropriate storage
+		 * mechanism.
+		 */
+		'fetch': function() {
+			var self = this;
+			var d = utils.deferred();
+			if ( this.isNew() ) {
+				d.reject('This model is new and cannot be fetched from storage.');
+			} else {
+				if ( this.storage ) {
+				} else {
+					var props = {};
+					props[this.idAttribute] = this[this.idAttribute]();
+					NinjaModel.esperanto.findWhere(this.model, props).done(function(result) {
+						_.each(result, function(value, key) {
+							self.set(key, value);
+						});
+						d.resolve(self);
+					}).fail(function(err) {
+						d.reject(err);
+					});
+				}
+			}
+			return d.promise();
+		},
 
-} (this, function (extend, LocalStorageModel, HttpModel, SocketModel) {
+		/**
+		 * Creates a new record in the appropriate storage mechanism representing this
+		 * model.
+		 */
+		'create': function() {
+			var self = this;
+			var d = utils.deferred();
+			if ( this.validationErrorCount() > 0 ) {
+				d.reject('Validation errors exist for this instance.');
+			} else {
+				var data = this.toJSON();
+				delete data[this.idAttribute];
+				if ( this.storage ) {
+				} else {
+					NinjaModel.esperanto.create(this.model, data).done(function(result) {
+						self.setID(result[self.idAttribute]);
+						d.resolve();
+					}).fail(function() {
+						d.reject();
+					});
+				}
+			}
+			return d.promise();
+		},
 
-    
+		/**
+		 * Returns true / false as to whether this model has been saved (i.e. it has
+		 * a unique id).
+		 */
+		'isNew': function() {
+			if ( _.isNull(this.id()) ) {
+				return true;
+			}
+			return false;
+		},
 
-    var Model = function (options) {
-        var model;
-        switch (options.storage) {
-            case 'http':
-                model = new HttpModel(options);
-                break;
-            case 'socket.io':
-                model = new SocketModel(options);
-                break;
-            default:
-                model = new LocalStorageModel(options);
-                break;
-        }
-        return model;
-    };
+		/**
+		 * Returns true / false as to whether the specified model instance "equals" this
+		 * model.
+		 */
+		'equals': function(model) {
+			if ( this === model ) {
+				return true;
+			}
+			return false;
+		},
 
-    Model.extend = extend;
+		/**
+		 * Updates an existing model. This method will throw an error if the model
+		 * does not already have a value for its id attribute.
+		 */
+		'update': function() {
+			var d = utils.deferred();
+			if ( this.validationErrorCount() > 0 ) {
+				d.reject('Validation errors exist for this instance.');
+			} else {
+				if ( !this.id() ) {
+					d.reject('This model is new and cannot be updated.');
+				}
+			}
+			return d.promise();
+		},
 
-    if (typeof define === 'function' && define.amd) {
-        return Model;
-    } else {
-        ko.ninjaModel = Model;
-    }
+		/**
+		 * If the model already has a value for its id attribute, this method will
+		 * save the existing model. Otherwise, it will create a new instance within
+		 * the appropriate storage mechanism.
+		 */
+		'save': function() {
+			var d = utils.deferred();
+			if ( this.validationErrorCount() > 0 ) {
+				d.reject('Validation errors exist for this instance.');
+			} else {
+				if ( !this.id() ) {
+					return this.create();
+				} else {
+					if ( this.storage ) {
+					} else {
+					}
+				}
+			}
+			return d.promise();
+		},
 
-}));
+		/**
+		 * Returns a JSON string describing the model.
+		 */
+		'serialize': function() {
+			return JSON.stringify(this.toJSON());
+		},
+
+		/**
+		 * Returns an object describing the model.
+		 */
+		'toJSON': function() {
+			var self = this;
+			var result = {};
+			var keys = _.keys(this.attributes);
+			_.each(keys, function(key) {
+				result[key] = ko.unwrap(self[key]);
+			});
+			result[self.idAttribute] = ko.unwrap(self[self.idAttribute]);
+			return result;
+		},
+
+		/**
+		 * Removes the model from storage.
+		 */
+		'destroy': function() {
+			var d = utils.deferred();
+			if ( this.isNew() ) {
+				d.reject('This model is new and cannot be deleted.');
+			} else {
+				var id = this.id();
+				NinjaModel.esperanto.destroy(this.model, id).done(function() {
+					cache.removeInstance(this.model, id);
+					d.resolve(this);
+				}).fail(function(err) {
+					d.reject(err);
+				});
+			}
+			return d.promise();
+		},
+
+		'setID': function(value) {
+			this[this.idAttribute](value);
+		}
+
+	});
+
+	NinjaModel.extend = extend;
+	NinjaModel.cache = cache;
+
+	return NinjaModel;
+
+});
+
 /*global define */
 
 (function (root, factory) {
@@ -1101,6 +1693,116 @@
 }));
 /*global define */
 
+define('ko.ninja.collection',[
+	'underscore',
+	'knockout',
+	'ko.ninja.model',
+    'ko.ninja.extend',
+    'ko.ninja.localStorageModel',
+    'validator',
+    'esperanto',
+    'ko.ninja.utils'
+], function(_, ko, NinjaModel, extend, utils) {
+
+	
+
+	/**
+	 * @class NinjaCollection
+	 */
+	var NinjaCollection = function() {
+		this._initialize.apply(this, _.toArray(arguments));
+	};
+
+	_.extend(NinjaCollection.prototype, /** @lends NinjaCollection.prototype */ {
+
+		'_initialize': function() {
+
+			/**
+			 * Observable array responsible for tracking the models that belong to this collection.
+			 */
+			this.models = ko.observableArray();
+
+		},
+
+		/**
+		 * Pushes a model instance (or an array of model instances) onto the collection's observable array.
+		 */
+		'push': function(models) {
+			if ( !_.isArray(models) ) {
+				models = [models];
+			}
+			var current_models = this.models();
+			_.each(models, function(model) {
+				if ( !(model instanceof NinjaModel) ) {
+					throw 'Invalid model specified.';
+				}
+				if ( current_models.indexOf(model) < 0 ) {
+					current_models.push(model);
+				}
+			});
+			this.models(current_models);
+		},
+
+		/**
+		 * Destroys the model and removes it from the collection.
+		 */
+		'destroy': function(model) {
+			var d = utils.deferred();
+			var id;
+			if ( _.isObject(model) && model instanceof NinjaModel ) {
+				id = model.id();
+			} else if ( _.isNumber(model) || _.isString(model) ) {
+				id = model;
+				model = null;
+			} else {
+				d.reject('Invalid model specified.');
+				return;
+			}
+			if ( !model ) {
+				model = NinjaModel.cache.getInstance(this.model, id);
+			}
+			if ( !model ) {
+				d.resolve(this);
+				return;
+			}
+			var current_models = this.models();
+			model.destroy().done(function() {
+				var idx = current_models.indexOf(model);
+				if ( idx >= 0 ) {
+					current_models.splice(idx, 1);
+					this.models(current_models);
+				}
+				d.resolve(this);
+			}).fail(function() {
+				d.reject('Unable to destroy model.');
+			});
+			return d.promise();
+		},
+
+		/**
+		 * Removes the model from the collection.
+		 */
+		'remove': function(model) {
+			var id;
+			if ( _.isObject(model) && model instanceof NinjaModel ) {
+				id = model.id();
+			} else if ( _.isNumber(model) || _.isString(model) ) {
+				id = model;
+			} else {
+				throw 'Invalid model specified.';
+			}
+		}
+
+	});
+
+	NinjaCollection.extend = extend;
+
+	return NinjaCollection;
+
+});
+
+/*global define */
+
 (function (root, factory) {
     
 
@@ -1110,7 +1812,8 @@
             'underscore',
             'knockout',
             'ko.ninja.viewModel',
-            'ko.ninja.model'
+            'ko.ninja.model',
+            'ko.ninja.collection'
         ], factory);
 
     // Non-AMD
@@ -1118,21 +1821,14 @@
         factory(root._, root.ko, root.ko.ninjaViewModel, root.ko.ninjaModel);
     }
 
-} (this, function (_, ko, ViewModel, Model) {
+} (this, function (_, ko, ViewModel, Model, Collection) {
 
     
 
+	ko.Collection = Collection;
     ko.ViewModel = ViewModel;
     ko.Model = Model;
 
-    // AMD
-    if (typeof define === 'function' && define.amd) {
-        return ko;
-
-    // Non-AMD
-    } else {
-        ko.ViewModel = ViewModel;
-        ko.Model = Model;
-    }
+	return ko;
 
 }));
