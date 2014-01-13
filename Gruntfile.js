@@ -61,6 +61,7 @@ module.exports = function(grunt) {
         },
         jshint: {
             options: {
+            	'-W098': true, // Ignore '... is undefined but never used error'
                 curly: false,
                 eqeqeq: true,
                 immed: true,
@@ -141,7 +142,33 @@ module.exports = function(grunt) {
                     }
                 }
             }
-        }
+        },
+
+		'jsbeautifier': {
+			'files': ['lib/*.js', 'lib/**/*.js'],
+			'options': {
+				'js': {
+					'braceStyle': 'collapse',
+					'breakChainedMethods': false,
+					'e4x': false,
+					'evalCode': false,
+					'indentChar': ' ',
+					'indentLevel': 0,
+					'indentSize': 4,
+					'indentWithTabs': true,
+					'jslintHappy': false,
+					'keepArrayIndentation': false,
+					'keepFunctionIndentation': false,
+					'maxPreserveNewlines': 10,
+					'preserveNewlines': true,
+					'spaceBeforeConditional': true,
+					'spaceInParen': false,
+					'unescapeStrings': false,
+					'wrapLineLength': 0
+				}
+			}
+		}
+
     });
 
     // These plugins provide necessary tasks.
@@ -152,6 +179,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-connect');
     grunt.loadNpmTasks('grunt-contrib-requirejs');
+    grunt.loadNpmTasks('grunt-jsbeautifier');
 
     // Default task.
     grunt.registerTask('default', ['jshint', 'requirejs']);

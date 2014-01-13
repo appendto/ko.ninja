@@ -72,6 +72,22 @@ require(['ko.ninja'], function (ko) {
 		}
 	});
 
+	var CatVM = ko.ViewModel.extend({
+		'observables': {
+			'color': function() {
+				return 'blue';
+			},
+			'cat': null
+		},
+		'initialize': function() {
+			console.log('cat vm is ready.');
+		}
+	});
+
+	var catVM = new CatVM();
+	console.log('color', catVM.color());
+	console.log('vm cat', catVM.cat);
+
 	// localStorage.clear();
 	// console.log('localStorage', localStorage);
 	// return;
