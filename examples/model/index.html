@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>ko.ninja - Model</title>
+    <link rel="stylesheet" type="text/css" href="http://knockoutjs.com/css/styles.css" />
+    <link rel="stylesheet" type="text/css" href="/css/styles.css" />
+</head>
+<body id="wrapper">
+
+    <br /><br />
+
+    <a href="/">&lt; back</a>
+
+    <br /><br />
+
+    <img src="https://raw.github.com/jcreamer898/ko.ninja/master/ko-ninja.gif" alt="" style="max-width:100%;">
+
+    <br /><br />
+    <h3>Model Example</h3>
+
+    <script src="http://codeorigin.jquery.com/jquery-2.0.3.min.js"></script>
+    <script data-main="../../ko.ninja.js" src="http://requirejs.org/docs/release/2.1.9/minified/require.js"></script>
+    <script src="../../ko.ninja.requireConfig.js"></script>
+    <script>
+
+require(['ko.ninja'], function (ko) {
+
+	/*
+	Here we define a 'Cat' model. The result is a constructor from which multiple, distinct
+	instances of Cat can be created.
+	*/
+	var Cat = ko.Model.extend({
+		'model': 'cats', // This maps to a namespace in localStorage, a MySQL table, a Mongo collection, etc...
+		'idAttribute': 'id', // The attribute used by this model as a unique identifier
+		// The various attributes that every instance of this model has. Observables are automatically created for these.
+		'attributes': {
+			'name': {
+				'type': 'string', // I borrowed heavily from the documentation for Sails: http://sailsjs.org/#!documentation/models
+				'maxLength': 10, // Validation rules are specified here.
+				'required': true
+			},
+			'color': {
+				'type': 'string',
+				'in': ['white', 'tabby', 'black', 'calico'], // Only values contained within this array are considered valid.
+				'required': true
+			},
+			'email': {
+				'type': 'email'
+			}
+		},
+		// Here you can specify additional observables to be created for each instance of Cat that don't map directly to attributes.
+		'observables': {
+			'check': 'one two',
+			'test': function() {
+				return this.name() + ' has an email address. It is: ' + this.email();
+			}
+		},
+		// You can create custom methods that are available for each instance of cat.
+		'purr': function() {
+			console.log(this.name() + ' the cat is now purring.');
+		}
+	});
+
+	var Cats = ko.Collection.extend({
+		'model': Cat,
+		'getNames': function() {
+			var result = [];
+			_.each(this.models(), function(cat) {
+				result.push(cat.name());
+			});
+			return result;
+		}
+	});
+
+	// localStorage.clear();
+	// console.log('localStorage', localStorage);
+	// return;
+
+	var cats = new Cats();
+
+	var cat = new Cat({
+		'id': '0d25fcd5-a76b-47cd-92bc-94d6bc2b8432'
+	});
+
+	cat.fetch().done(function(cat) {
+		console.log('fetch success', cat);
+	}).fail(function(err) {
+		console.log('fetch failure', err);
+	});
+
+});
+
+    </script>
+
+</body>
+</html>

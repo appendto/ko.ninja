@@ -26,6 +26,7 @@
     "grunt-contrib-watch": "~0.5.1",
     "grunt-contrib-connect": "~0.3.0",
     "grunt-contrib-requirejs": "latest",
-    "socket.io": "latest"
+    "socket.io": "latest",
+    "express": "~3.4.7"
   }
 }
