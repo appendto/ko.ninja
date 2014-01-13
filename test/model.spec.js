@@ -19,6 +19,7 @@ define([
 
 	module('ko.Model', {
 		'setup': function() {
+			localStorage.clear();
 			this.person = new Person({
 				'first_name': 'John',
 				'last_name': 'Doe'
@@ -27,22 +28,6 @@ define([
 		'teardown': function() {
 			localStorage.clear();
 		}
-	});
-
-	asyncTest('when inserting data', function() {
-
-		var self = this;
-
-		this.person.save().done(function() {
-			ok(self.person.id(), 'it should set an ID');
-			equal(self.person.first_name(), 'John', 'it should set first_name');
-			equal(self.person.last_name(), 'Doe', 'it should set last_name');
-			start();
-		}).fail(function(result) {
-			ok(false, 'the returned promise should not fail.');
-			start();
-		});
-
 	});
 
 	asyncTest('when updating data', function() {

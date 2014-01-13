@@ -1,5 +1,5 @@
 define([
-    'validator',
+    'ko.ninja.validator',
     'underscore'
 ], function(validator, _) {
 

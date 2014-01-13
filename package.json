@@ -4,16 +4,15 @@
   "description": "A framework for building knockout.js apps",
   "repository": {
     "type": "git",
-    "url": "git://github.com/jcreamer898/ko.ninja"
+    "url": "git://github.com/appendto/ko.ninja"
   },
   "keywords": [
     "knockout.js",
     "framework"
   ],
-  "author": "Jonathan Creamer",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/jcreamer898/ko.ninja/issues"
+    "url": "https://github.com/appendto/ko.ninja/issues"
   },
   "devDependencies": {
     "underscore": "latest",

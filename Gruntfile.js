@@ -61,7 +61,7 @@ module.exports = function(grunt) {
         },
         jshint: {
             options: {
-            	'-W098': true, // Ignore '... is undefined but never used error'
+                '-W098': true, // Ignore '... is undefined but never used error'
                 curly: false,
                 eqeqeq: true,
                 immed: true,
