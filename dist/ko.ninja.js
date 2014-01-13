@@ -6,6 +6,75 @@
 
     // AMD
     if (typeof define === 'function' && define.amd) {
+        define('ko.ninja.extend',[
+            'underscore'
+        ], factory);
+
+    // Non-AMD
+    } else {
+        factory(root._, root.ko);
+    }
+
+} (this, function (_, ko) {
+
+    
+
+    var Extend = function(protoProps, staticProps) {
+        var parent = this,
+            Surrogate,
+            child;
+
+        // The constructor function for the new subclass is either defined by you
+        // (the "constructor" property in your `extend` definition), or defaulted
+        // by us to simply call the parent's constructor.
+        if (protoProps && _.has(protoProps, 'constructor')) {
+            child = protoProps.constructor;
+        } else {
+            child = function() { return parent.apply(this, arguments); };
+        }
+
+        // Add static properties to the constructor function, if supplied.
+        _.extend(child, parent, staticProps);
+
+        // Set the prototype chain to inherit from `parent`, without calling
+        // `parent`'s constructor function.
+        Surrogate = function(){ this.constructor = child; };
+        Surrogate.prototype = parent.prototype;
+        child.prototype = new Surrogate();
+
+        // Add prototype properties (instance properties) to the subclass,
+        // if supplied.
+        if (protoProps) {
+            _.extend(child.prototype, protoProps);
+        }
+
+        // Set a convenience property in case the parent's prototype is needed
+        // later.
+        child.__super__ = parent.prototype;
+
+        if (protoProps.name) {
+            child.prototype.toString = function() {
+                return protoProps.name;
+            };
+        }
+
+        return child;
+    };
+
+    if (typeof define === 'function' && define.amd) {
+        return Extend;
+    } else {
+        ko.ninjaExtend = Extend;
+    }
+
+}));
+/*global define */
+
+(function (root, factory) {
+    
+
+    // AMD
+    if (typeof define === 'function' && define.amd) {
         define('ko.ninja.events',[
             'underscore'
         ], factory);
@@ -223,75 +292,6 @@
 
     // AMD
     if (typeof define === 'function' && define.amd) {
-        define('ko.ninja.extend',[
-            'underscore'
-        ], factory);
-
-    // Non-AMD
-    } else {
-        factory(root._, root.ko);
-    }
-
-} (this, function (_, ko) {
-
-    
-
-    var Extend = function(protoProps, staticProps) {
-        var parent = this,
-            Surrogate,
-            child;
-
-        // The constructor function for the new subclass is either defined by you
-        // (the "constructor" property in your `extend` definition), or defaulted
-        // by us to simply call the parent's constructor.
-        if (protoProps && _.has(protoProps, 'constructor')) {
-            child = protoProps.constructor;
-        } else {
-            child = function() { return parent.apply(this, arguments); };
-        }
-
-        // Add static properties to the constructor function, if supplied.
-        _.extend(child, parent, staticProps);
-
-        // Set the prototype chain to inherit from `parent`, without calling
-        // `parent`'s constructor function.
-        Surrogate = function(){ this.constructor = child; };
-        Surrogate.prototype = parent.prototype;
-        child.prototype = new Surrogate();
-
-        // Add prototype properties (instance properties) to the subclass,
-        // if supplied.
-        if (protoProps) {
-            _.extend(child.prototype, protoProps);
-        }
-
-        // Set a convenience property in case the parent's prototype is needed
-        // later.
-        child.__super__ = parent.prototype;
-
-        if (protoProps.name) {
-            child.prototype.toString = function() {
-                return protoProps.name;
-            };
-        }
-
-        return child;
-    };
-
-    if (typeof define === 'function' && define.amd) {
-        return Extend;
-    } else {
-        ko.ninjaExtend = Extend;
-    }
-
-}));
-/*global define */
-
-(function (root, factory) {
-    
-
-    // AMD
-    if (typeof define === 'function' && define.amd) {
         define('ko.ninja.baseModel',[
             'underscore',
             'ko.ninja.events',
@@ -458,7 +458,7 @@
 }));
 /*global define */
 
-define('validator',[
+define('ko.ninja.validator',[
 	'underscore'
 ], function(_) {
 
@@ -933,12 +933,15 @@ define('ko.ninja.deferred',[],function () {
 /*global define, $ */
 
 define('ko.ninja.utils',[
+	'underscore',
+	'knockout',
 	'ko.ninja.deferred'
-], function(Deferred) {
+], function(_, ko, Deferred) {
 
 	
 
 	return {
+
 		/**
 		 * Generates a RFC 4122 Universally Unique Identifier (UID)
 		 * @link http://tools.ietf.org/search/rfc4122
@@ -951,6 +954,32 @@ define('ko.ninja.utils',[
 			});
 		},
 
+		/**
+		 * Assumes that the parent object has an object of values stored at the
+		 * this.observables property, which are intended to be converted into Knockout
+		 * observables. Loops through each one and does so.
+		 * @mixin
+		 */
+		'initObservables': function() {
+			var self = this;
+			_.each(this.observables, function(obs, obsKey) {
+				if ( _.isFunction(obs) ) {
+					self[obsKey] = ko.computed({
+						'read': obs,
+						'deferEvaluation': true,
+						'owner': self
+					});
+				} else if ( _.isArray(obs) ) {
+					self[obsKey] = ko.observableArray(obs);
+				} else if ( _.isObject(obs) && obs.read ) {
+					obs.owner = self;
+					self[obsKey] = ko.computed(obs);
+				} else {
+					self[obsKey] = ko.observable(obs);
+				}
+			});
+		},
+
 		'deferred': function (options) {
 			if (typeof window.$ === 'object') {
 				return $.Deferred(options);
@@ -958,7 +987,60 @@ define('ko.ninja.utils',[
 				return new Deferred(options);
 			}
 		}
+
 	};
+
+});
+
+/*global define */
+
+define('ko.ninja.viewModel',[
+	'underscore',
+	'knockout',
+    'ko.ninja.extend',
+    'ko.ninja.localStorageModel',
+    'ko.ninja.validator',
+    'esperanto',
+    'ko.ninja.utils'
+], function(_, ko, extend, LocalStorageModel, validator, Esperanto, utils) {
+
+	
+
+	/**
+	 * @class NinjaViewModel
+	 */
+	var NinjaViewModel = function() {
+		this._initialize(_.toArray(arguments));
+		this.initialize();
+	};
+
+	_.extend(NinjaViewModel.prototype, /** @lends NinjaViewModel.prototype */ {
+
+		/**
+		 * @override
+		 */
+		'observables': {},
+
+		/*
+		Private method for performing initial instance setup.
+		*/
+		'_initialize': function() {
+			this.initObservables();
+		},
+
+		/**
+		 * @override
+		 */
+		'initialize': function(options) {
+		},
+
+		'initObservables': utils.initObservables
+
+	});
+
+	NinjaViewModel.extend = extend;
+
+	return NinjaViewModel;
 
 });
 
@@ -969,7 +1051,7 @@ define('ko.ninja.model',[
 	'knockout',
     'ko.ninja.extend',
     'ko.ninja.localStorageModel',
-    'validator',
+    'ko.ninja.validator',
     'esperanto',
     'ko.ninja.utils'
 ], function(_, ko, extend, LocalStorageModel, validator, Esperanto, utils) {
@@ -1147,25 +1229,7 @@ define('ko.ninja.model',[
 
 		},
 
-		'initObservables': function() {
-			var self = this;
-			_.each(this.observables, function(obs, obsKey) {
-				if ( _.isFunction(obs) ) {
-					self[obsKey] = ko.computed({
-						'read': obs,
-						'deferEvaluation': true,
-						'owner': self
-					});
-				} else if ( _.isArray(obs) ) {
-					self[obsKey] = ko.observableArray(obs);
-				} else if ( _.isObject(obs) && obs.read ) {
-					obs.owner = self;
-					self[obsKey] = ko.computed(obs);
-				} else {
-					self[obsKey] = ko.observable(obs);
-				}
-			});
-		},
+		'initObservables': utils.initObservables,
 
 		/* Returns the total number of validation errors that exist for this instance. */
 		'validationErrorCount': function() {
@@ -1398,308 +1462,13 @@ define('ko.ninja.model',[
 
 /*global define */
 
-(function (root, factory) {
-    
-
-    // AMD
-    if (typeof define === 'function' && define.amd) {
-        define('ko.ninja.validation',[
-            'knockout',
-            'underscore'
-        ], factory);
-
-    // Non-AMD
-    } else {
-        factory(root.ko, root._);
-    }
-
-} (this, function (ko, _) {
-
-    
-
-    var validation = {
-
-        validationTypes: {
-
-            _custom: function (value, config) {
-                return config.validator.call(this, value, config);
-            },
-
-            _maxLength: function (value, config) {
-                return value.length > config.value;
-            },
-
-            _minLength: function (value, config) {
-                return value.length < config.value;
-            },
-
-            _length: function (value, config) {
-                return value.length !== config.value;
-            },
-
-            _required: function (value) {
-                return !value || !value.length;
-            },
-
-            _email: function (value) {
-                return !/[^\s@]+@[^\s@]+\.[^\s@]+/.test(value);
-            },
-
-            _number: function (value) {
-                return !(!isNaN(parseFloat(value)) && isFinite(value));
-            }
-
-        },
-
-        _validate: function (validations, observable) {
-            var value = (this[observable]) ? this[observable]() : null,
-                errors = [];
-            _.each(validations, function (config, name) {
-                if (this.validationTypes['_' + name]) {
-                    var inavalid = this.validationTypes['_' + name].call(this, value, config);
-                    if (inavalid) {
-                        if (typeof config === 'string') {
-                            config = {
-                                message: config
-                            };
-                        }
-                        errors.push({
-                            observable: observable,
-                            error: config.message
-                        });
-                    }
-                }
-            }, this);
-            return errors;
-        },
-
-        validateOne: function (observable) {
-            var invalid = this._validate(this.validation[observable], observable);
-            if (invalid.length) {
-                return invalid[0].error;
-            }
-        },
-
-        validateAll: function () {
-            var errors = [];
-            _.each(this.validation, function (validations, observable) {
-                errors = errors.concat(this._validate(validations, observable));
-            }, this);
-            return errors;
-        },
-
-        validate: function () {
-            var errors = {};
-            this.errors(this.validateAll());
-            _.each(this.errors(), function (error) {
-                if (!errors[error.observable]) {
-                    this[error.observable].error(error.error);
-                    errors[error.observable] = true;
-                }
-            }, this);
-            return (this.errors().length) ? this.errors() : null;
-        },
-
-        watchValidation: function (observable) {
-            if (this[observable]) {
-                this[observable].error = ko.observable();
-                this[observable].subscribe(function () {
-                    this[observable].error(this.validateOne(observable));
-                    this.errors(this.validateAll());
-                }.bind(this));
-            }
-        },
-
-        watchValidations: function () {
-            this.errors = ko.observableArray();
-            _.each(this.validation, function (validation, observable) {
-                this.watchValidation(observable);
-            }, this);
-        }
-
-    };
-
-    if (typeof define === 'function' && define.amd) {
-        return validation;
-    } else {
-        ko.ninjaValidation = validation;
-    }
-
-}));
-/*global define */
-
-(function (root, factory) {
-    
-
-    // AMD
-    if (typeof define === 'function' && define.amd) {
-        define('ko.ninja.viewModel',[
-            'knockout',
-            'underscore',
-            'ko.ninja.events',
-            'ko.ninja.extend',
-            'ko.ninja.model',
-            'ko.ninja.validation'
-        ], factory);
-
-    // Non-AMD
-    } else {
-        factory(root.ko, root._, root.ko.ninjaEvents, root.ko.ninjaExtend, root.ko.ninjaModel, root.ko.ninjaValidation);
-    }
-
-} (this, function (ko, _, Events, extend, Model, Validation) {
-
-    
-
-    var setupObservables = function(options) {
-        var computedObservables = _.functions(this.observables);
-
-        computedObservables = _.reduce(this.observables, function(memo, value, prop) {
-            if (_.isObject(value) && !_.isArray(value) && (value.read || value.write)) {
-                memo.push(prop);
-            }
-            return memo;
-        }, computedObservables);
-
-        // Process the observables first
-        _.each(_.omit(this.observables, computedObservables), function (value, prop) {
-            if (_.isArray(value)) {
-                if (ko.isObservable(options[prop])) {
-                    this[prop] = options[prop];
-                }
-                else {
-                    this[prop] = ko.observableArray((options[prop] || value).slice(0));
-                }
-            }
-            else {
-                if (ko.isObservable(options[prop])) {
-                    this[prop] = options[prop];
-                }
-                else {
-                    this[prop] = ko.observable(options[prop] || value);
-                }
-            }
-
-            this[prop].subscribe(function(value) {
-                this.trigger('change:' + prop, value);
-            }, this);
-        }, this);
-
-        // Now process the computedObservables
-        _.each(_.pick(this.observables, computedObservables), function(value, prop) {
-            this[prop] = ko.computed({
-                read: this.observables[prop],
-                write: function () {
-                    // Keeps it from breaking.
-                    // Perhaps we need a way to allow writing to computed observables, though
-                },
-                owner: this
-            }, this);
-        }, this);
-    };
-
-    var setupValidation = function() {
-
-    };
-
-    var setupModel = function () {
-        var self = this,
-            sync = function () {
-                var data = {};
-                _.each(self.observables, function (val, name) {
-                    data[name] = self[name]();
-                });
-                self.model.save(data, function () {});
-            }, debounceSync = _.debounce(sync, 1);
-
-        if (!this.model.status) {
-            this.model = new Model(this.model);
-        }
-
-        // This keeps the model from autoSyncing if the viewModel has autoSync: false
-        // defined on it.
-        if (this.autoSync !== false) {
-            this.autoSync = true;
-        }
-
-        this.fetch = function (done) {
-            var self = this,
-                autoSync = this.autoSync;
-
-            this.autoSync = false;
-            this.model.findOne(this[this.idAttribute || 'id'](), function (data) {
-                _.each(data, function (value, name) {
-                    if (typeof self[name] === 'function') {
-                        self[name](value);
-                    }
-                });
-                self.autoSync = autoSync;
-                if (_.isFunction(done)) {
-                    done();
-                }
-            });
-        };
-
-        _.each(this.observables, function (val, name) {
-            self[name].subscribe(function () {
-                if (self.autoSync && !self.validateAll().length) {
-                    debounceSync();
-                }
-            });
-        });
-    };
-
-    //### ko.ViewModel
-    var ViewModel = function ViewModel(options) {
-
-        options = options || {};
-
-        setupObservables.call(this, options);
-
-        this.watchValidations();
-
-        if (this.validation) {
-            setupValidation.call(this);
-        }
-
-        this.initialize.apply(this, arguments);
-
-        if (this.model) {
-            setupModel.call(this, options);
-        }
-
-        if (this.autoSync) {
-            this.fetch();
-        }
-
-        if (this.el) {
-            ko.applyBindings(this, (typeof this.el === 'object') ? this.el : document.querySelector(this.el)[0]);
-        }
-
-    };
-
-    _.extend(ViewModel.prototype, Events, Validation, {
-        initialize: function() {}
-    });
-
-    ViewModel.extend = extend;
-
-    if (typeof define === 'function' && define.amd) {
-        return ViewModel;
-    } else {
-        ko.ninjaViewModel = ViewModel;
-    }
-
-}));
-/*global define */
-
 define('ko.ninja.collection',[
 	'underscore',
 	'knockout',
 	'ko.ninja.model',
     'ko.ninja.extend',
     'ko.ninja.localStorageModel',
-    'validator',
+    'ko.ninja.validator',
     'esperanto',
     'ko.ninja.utils'
 ], function(_, ko, NinjaModel, extend, utils) {
@@ -1790,6 +1559,12 @@ define('ko.ninja.collection',[
 				id = model;
 			} else {
 				throw 'Invalid model specified.';
+			}
+			var models = this.models();
+			var idx = models.indexOf(model);
+			if ( idx >= 0 ) {
+				models.splice(idx, 1);
+				this.models(models);
 			}
 		}
 
