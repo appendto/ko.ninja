@@ -1,5 +1,4 @@
-#ko.ninja
-========
+# ko.ninja
 
 ## Examples
 
