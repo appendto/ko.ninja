@@ -1,8 +1,10 @@
 # ko.ninja
 
-## Examples
+## Models
 
 ### Defining a Model
+
+The `Model` class is used to represent data objects. A model instance typically represents a row in a remote database or some other form of persistent storage.
 
 ```javascript
 var Person = ko.Model.extend({
@@ -71,6 +73,10 @@ person.destroy().done(function() {
 });
 ```
 
+## Collections
+
+The `Collection` class is used to represent a collection of model instances (e.g. a group of people, etc...). Models can easily be added to and removed from the collection. Methods can also be defined on the collection level that allow you to operate on multiple models with a single call.
+
 ### Defining a Collection
 
 ```javascript
@@ -98,4 +104,19 @@ people.push(person);
 
 ```javascript
 people.remove(person);
+```
+
+#### The Collection Observable
+
+The underlying mechanism for tracking the models that belong to a particular collection is a Knockout.JS Observable Array. The observable array can be accessed directly as shown below:
+
+```javascript
+var obs = people.models;
+```
+
+As with any other Knockout.JS observable, you can subscribe to this value to watch for future changes:
+
+```javascript
+people.models.subscribe(function(data) {
+});
 ```
