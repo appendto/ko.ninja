@@ -100,10 +100,32 @@ var people = new People();
 people.push(person);
 ```
 
+#### Creating a New Record within a Collection
+
+```javascript
+people.create({
+	'first_name': 'Jane',
+	'last_name': 'Smith',
+	'email': 'jane.smith@gmail.com'
+}).done(function(result) {
+	// Success
+}).fail(function() {
+	// Failure
+});
+```
+
 #### Removing a Record from a Collection
 
 ```javascript
 people.remove(person);
+```
+
+#### Deleting a Record Contained within a Collection
+
+Calling a model's `destroy` method will cause it to be deleted from the server, then removed from the collection that contains it.
+
+```javascript
+people.destroy(person);
 ```
 
 #### The Collection Observable
