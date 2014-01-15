@@ -61,7 +61,6 @@ module.exports = function(grunt) {
         },
         jshint: {
             options: {
-                '-W098': true, // Ignore '... is undefined but never used error'
                 curly: false,
                 eqeqeq: true,
                 immed: true,
@@ -101,7 +100,7 @@ module.exports = function(grunt) {
             all: {
                 options: {
                     urls: [
-                        'http://localhost:8004/qunit.html'
+                        'http://localhost:8001/qunit.html'
                     ]
                 }
             }
@@ -124,20 +123,12 @@ module.exports = function(grunt) {
                     server: path.resolve('./server'),
                     debug: false
                 }
-            },
-            test: {
-                options: {
-                    hostname: 'localhost',
-                    port: 8004,
-                    server: path.resolve('./server'),
-                    debug: false
-                }
             }
         },
         connect: {
             test: {
                 options: {
-                    port: 8001,
+                    port: 8002,
                     base: 'test',
                     keepalive: true,
                     middleware: function(connect, options) {
@@ -150,33 +141,7 @@ module.exports = function(grunt) {
                     }
                 }
             }
-        },
-
-		'jsbeautifier': {
-			'files': ['lib/*.js', 'lib/**/*.js'],
-			'options': {
-				'js': {
-					'braceStyle': 'collapse',
-					'breakChainedMethods': false,
-					'e4x': false,
-					'evalCode': false,
-					'indentChar': ' ',
-					'indentLevel': 0,
-					'indentSize': 4,
-					'indentWithTabs': true,
-					'jslintHappy': false,
-					'keepArrayIndentation': false,
-					'keepFunctionIndentation': false,
-					'maxPreserveNewlines': 10,
-					'preserveNewlines': true,
-					'spaceBeforeConditional': true,
-					'spaceInParen': false,
-					'unescapeStrings': false,
-					'wrapLineLength': 0
-				}
-			}
-		}
-
+        }
     });
 
     // These plugins provide necessary tasks.
@@ -187,11 +152,10 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-connect');
     grunt.loadNpmTasks('grunt-contrib-requirejs');
-    grunt.loadNpmTasks('grunt-jsbeautifier');
 
     // Default task.
     grunt.registerTask('default', ['jshint', 'requirejs']);
-    grunt.registerTask('test', ['express:test', 'qunit']);
-    grunt.registerTask('server', ['express:server', 'watch']);
+    grunt.registerTask('test', ['connect:qunit', 'qunit']);
+    grunt.registerTask('server', ['express', 'watch']);
 
 };

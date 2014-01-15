@@ -1,7 +1,11 @@
+/*global define, module, test, ok, equal */
+
 define([
     'ko.ninja.validator',
     'underscore'
 ], function(validator, _) {
+
+	'use strict';
 
     module('ko.Validation', {
         setup: function () {
@@ -10,21 +14,23 @@ define([
 
 	test('maxLength', function() {
 
-		var result = validator.validate('Tim', {
+		var result, err;
+
+		result = validator.validate('Tim', {
 			'maxLength': 1
 		});
 
-		var err = _.findWhere(result, {
+		err = _.findWhere(result, {
 			'rule': 'maxLength'
 		});
 
 		ok(err, 'An error should be generated.');
 
-		var result = validator.validate('Tim', {
+		result = validator.validate('Tim', {
 			'maxLength': 3
 		});
 
-		var err = _.findWhere(result, {
+		err = _.findWhere(result, {
 			'rule': 'maxLength'
 		});
 
@@ -34,21 +40,23 @@ define([
 
 	test('minLength', function() {
 
-		var result = validator.validate('Tim', {
+		var result, err;
+
+		result = validator.validate('Tim', {
 			'minLength': 5
 		});
 
-		var err = _.findWhere(result, {
+		err = _.findWhere(result, {
 			'rule': 'minLength'
 		});
 
 		ok(err, 'An error should be generated.');
 
-		var result = validator.validate('Tim', {
+		result = validator.validate('Tim', {
 			'minLength': 3
 		});
 
-		var err = _.findWhere(result, {
+		err = _.findWhere(result, {
 			'rule': 'minLength'
 		});
 
@@ -58,21 +66,23 @@ define([
 
 	test('required', function() {
 
-		var result = validator.validate('', {
+		var result, err;
+
+		result = validator.validate('', {
 			'required': true
 		});
 
-		var err = _.findWhere(result, {
+		err = _.findWhere(result, {
 			'rule': 'required'
 		});
 
 		ok(err, 'An error should be generated.');
 
-		var result = validator.validate('Tim', {
+		result = validator.validate('Tim', {
 			'required': true
 		});
 
-		var err = _.findWhere(result, {
+		err = _.findWhere(result, {
 			'rule': 'required'
 		});
 
@@ -82,21 +92,23 @@ define([
 
 	test('email', function() {
 
-		var result = validator.validate('blarg', {
+		var result, err;
+
+		result = validator.validate('blarg', {
 			'email': true
 		});
 
-		var err = _.findWhere(result, {
+		err = _.findWhere(result, {
 			'rule': 'email'
 		});
 
 		ok(err, 'An error should be generated.');
 
-		var result = validator.validate('tkambler@gmail.com', {
+		result = validator.validate('tkambler@gmail.com', {
 			'email': true
 		});
 
-		var err = _.findWhere(result, {
+		err = _.findWhere(result, {
 			'rule': 'email'
 		});
 
@@ -106,21 +118,23 @@ define([
 
 	test('numeric', function() {
 
-		var result = validator.validate('abc', {
+		var result, err;
+
+		result = validator.validate('abc', {
 			'numeric': true
 		});
 
-		var err = _.findWhere(result, {
+		err = _.findWhere(result, {
 			'rule': 'numeric'
 		});
 
 		ok(err, 'An error should be generated.');
 
-		var result = validator.validate(500, {
+		result = validator.validate(500, {
 			'numeric': true
 		});
 
-		var err = _.findWhere(result, {
+		err = _.findWhere(result, {
 			'rule': 'numeric'
 		});
 

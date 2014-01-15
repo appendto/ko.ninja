@@ -47,7 +47,7 @@ define([
 				equal(self.person.first_name(), first_name, 'Jane', 'it should set first_name');
 				equal(self.person.last_name(), last_name, 'Smith', 'it should set last_name');
 				start();
-			}).fail(function(result) {
+			}).fail(function() {
 				ok(false, 'the returned promise should not fail.');
 				start();
 			});
@@ -61,7 +61,6 @@ define([
 		var self = this;
 
 		this.person.save().done(function() {
-			var id = self.person.id();
 			self.person.destroy().done(function() {
 				equal(self.person.id(), null, 'id should be null');
 				equal(self.person.first_name(), null, 'first_name should be null');
